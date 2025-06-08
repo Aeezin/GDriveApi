@@ -20,49 +20,62 @@ namespace DriveAPI.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest model)
         {
-            var user = new ApplicationUser { UserName = model.Username, Email = model.Email };
+            try
+            {
+                var user = new ApplicationUser { UserName = model.Username, Email = model.Email };
 
-            var result = await userManager.CreateAsync(user, model.Password);
-            if (!result.Succeeded)
-                return BadRequest(result.Errors);
+                var result = await userManager.CreateAsync(user, model.Password);
+                if (!result.Succeeded)
+                    return BadRequest("something went wrong." + result.Errors);
 
-            return Ok("User registered successfully.");
+                return Ok("User registered successfully.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var user = await userManager.FindByNameAsync(request.Username);
-            if (user != null && await userManager.CheckPasswordAsync(user, request.Password))
+            try
             {
-                var jwtSection = configuration.GetSection("Jwt");
-                var key = Encoding.UTF8.GetBytes(jwtSection["key"]);
-
-                var tokenDescriptor = new SecurityTokenDescriptor
+                var user = await userManager.FindByNameAsync(request.Username);
+                if (user != null && await userManager.CheckPasswordAsync(user, request.Password))
                 {
-                    Subject = new ClaimsIdentity(
-                        new[]
-                        {
-                            new Claim(ClaimTypes.NameIdentifier, user.Id),
-                            new Claim(ClaimTypes.Name, user.UserName),
-                        }
-                    ),
-                    Expires = DateTime.UtcNow.AddHours(3),
-                    Issuer = jwtSection["Issuer"],
-                    Audience = jwtSection["Audience"],
-                    SigningCredentials = new SigningCredentials(
-                        new SymmetricSecurityKey(key),
-                        SecurityAlgorithms.HmacSha256Signature
-                    ),
-                };
+                    var jwtSection = configuration.GetSection("Jwt");
+                    var key = Encoding.UTF8.GetBytes(jwtSection["key"]);
 
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var token = tokenHandler.CreateToken(tokenDescriptor);
+                    var tokenDescriptor = new SecurityTokenDescriptor
+                    {
+                        Subject = new ClaimsIdentity(
+                            [
+                                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                                new Claim(ClaimTypes.Name, user.UserName),
+                            ]
+                        ),
+                        Expires = DateTime.UtcNow.AddHours(3),
+                        Issuer = jwtSection["Issuer"],
+                        Audience = jwtSection["Audience"],
+                        SigningCredentials = new SigningCredentials(
+                            new SymmetricSecurityKey(key),
+                            SecurityAlgorithms.HmacSha256Signature
+                        ),
+                    };
 
-                return Ok(new { Token = tokenHandler.WriteToken(token) });
+                    var tokenHandler = new JwtSecurityTokenHandler();
+                    var token = tokenHandler.CreateToken(tokenDescriptor);
+
+                    return Ok(new { Token = tokenHandler.WriteToken(token) });
+                }
+
+                return Unauthorized("Invalid credentials");
             }
-
-            return Unauthorized("Invalid credentials");
+            catch (Exception ex)
+            {
+                return BadRequest("Something went wrong." + ex.Message);
+            }
         }
     }
 }

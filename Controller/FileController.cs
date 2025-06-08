@@ -14,43 +14,64 @@ namespace DriveAPI.Controllers
         [HttpPost("upload-file")]
         public async Task<IActionResult> UploadFile([FromBody] UploadFileRequest request)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var result = await fileService.UploadFileAsync(
-                userId!,
-                request.FolderId,
-                request.FileName,
-                request.Content
-            );
+                var result = await fileService.UploadFileAsync(
+                    userId!,
+                    request.FolderId,
+                    request.FileName,
+                    request.Content
+                );
 
-            if (result == null)
-                return Forbid("Folder not found.");
+                if (result == null)
+                    return Forbid("Folder not found.");
 
-            return Ok(result);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Something went wrong." + ex.Message);
+            }
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> DownloadFile(Guid id)
         {
-            User.FindFirstValue(ClaimTypes.NameIdentifier);
+            try
+            {
+                User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var file = await fileService.DownloadFileAsync(id);
-            if (file == null)
-                return NotFound();
+                var file = await fileService.DownloadFileAsync(id);
+                if (file == null)
+                    return NotFound();
 
-            return File(file.Content, "application/octet-stream", file.Name);
+                return File(file.Content, "application/octet-stream", file.Name);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Something went wrong." + ex.Message);
+            }
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteFile(Guid id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (string.IsNullOrWhiteSpace(userId))
-                return Unauthorized("Could not find user.");
+                if (string.IsNullOrWhiteSpace(userId))
+                    return Unauthorized("Could not find user.");
 
-            await fileService.DeleteFileAsync(id, userId);
-            return NoContent();
+                await fileService.DeleteFileAsync(id, userId);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Something went wrong" + ex.Message);
+            }
         }
     }
 }

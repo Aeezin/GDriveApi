@@ -19,15 +19,22 @@ namespace DriveAPI.Controllers
         [HttpPost("create-folder")]
         public async Task<IActionResult> CreateFolder([FromBody] CreateFolderRequest request)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (string.IsNullOrWhiteSpace(userId))
-                return Unauthorized("Could not find user");
+                if (string.IsNullOrWhiteSpace(userId))
+                    return Unauthorized("Could not find user");
 
-            var folderName = request.FolderName;
+                var folderName = request.FolderName;
 
-            var folder = await folderService.CreateFolderAsync(userId, folderName);
-            return Ok(folder);
+                var folder = await folderService.CreateFolderAsync(userId, folderName);
+                return Ok(folder);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Something went wrong." + ex.Message);
+            }
         }
 
         [HttpGet("get-folder/{id}")]
@@ -48,21 +55,28 @@ namespace DriveAPI.Controllers
         [HttpGet("get-all-files")]
         public async Task<IActionResult> GetAllFilesFromFolder([FromQuery] string folderName)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (string.IsNullOrWhiteSpace(userId))
-                return Unauthorized("Could not find user.");
+                if (string.IsNullOrWhiteSpace(userId))
+                    return Unauthorized("Could not find user.");
 
-            if (string.IsNullOrWhiteSpace(folderName))
-                return BadRequest("Folder name is required.");
+                if (string.IsNullOrWhiteSpace(folderName))
+                    return BadRequest("Folder name is required.");
 
-            var folder = await folderRepository.GetByNameAsync(folderName, userId);
-            if (folder == null)
-                return NotFound($"Folder '{folderName}' not found for this user.");
+                var folder = await folderRepository.GetByNameAsync(folderName, userId);
+                if (folder == null)
+                    return NotFound($"Folder '{folderName}' not found for this user.");
 
-            var files = await fileRepository.GetFilesByFolderIdAsync(folder.Id);
+                var files = await fileRepository.GetFilesByFolderIdAsync(folder.Id);
 
-            return Ok(files);
+                return Ok(files);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Something went wrong." + ex.Message);
+            }
         }
     }
 }
