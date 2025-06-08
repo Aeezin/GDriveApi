@@ -32,7 +32,7 @@ namespace DriveAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest("Something went wrong." + ex.Message);
+                return BadRequest("Something went wrong. " + ex.Message);
             }
         }
 
@@ -51,7 +51,7 @@ namespace DriveAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest("Something went wrong." + ex.Message);
+                return BadRequest("Something went wrong. " + ex.Message);
             }
         }
 
@@ -70,7 +70,7 @@ namespace DriveAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest("Something went wrong" + ex.Message);
+                return BadRequest("Something went wrong. " + ex.Message);
             }
         }
     }

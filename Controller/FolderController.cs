@@ -33,23 +33,30 @@ namespace DriveAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest("Something went wrong." + ex.Message);
+                return BadRequest("Something went wrong. " + ex.Message);
             }
         }
 
         [HttpGet("get-folder/{id}")]
         public async Task<IActionResult> GetFolder(Guid id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (string.IsNullOrWhiteSpace(userId))
-                return Unauthorized("Could not find user.");
+                if (string.IsNullOrWhiteSpace(userId))
+                    return Unauthorized("Could not find user.");
 
-            var folder = await folderService.GetFolderByIdAsync(id);
-            if (folder == null || folder.UserId != userId)
-                return NotFound();
+                var folder = await folderService.GetFolderByIdAsync(id);
+                if (folder == null || folder.UserId != userId)
+                    return NotFound();
 
-            return Ok(folder);
+                return Ok(folder);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Something went wrong. " + ex.Message);
+            }
         }
 
         [HttpGet("get-all-files")]
@@ -75,7 +82,7 @@ namespace DriveAPI.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest("Something went wrong." + ex.Message);
+                return BadRequest("Something went wrong. " + ex.Message);
             }
         }
     }
